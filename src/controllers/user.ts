@@ -10,7 +10,7 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) => Use
       );
     }
 
-    res.send(users);
+    res.send({ users });
   })
   .catch(next);
 
