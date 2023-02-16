@@ -1,6 +1,8 @@
 import express, { json } from 'express';
 import mongoose from 'mongoose';
-import fakeAuth from './middleware/fakeAuth';
+import { signInValidator, signUpValidator } from './utils/validator';
+import auth from './middleware/auth';
+import { createUser, login } from './controllers/user';
 import errorHandler from './middleware/errorHandler';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
@@ -10,7 +12,11 @@ const app = express();
 mongoose.connect(DB_URL);
 
 app.use(json());
-app.use(fakeAuth);
+
+app.post('/signin', signInValidator, login);
+app.post('/signup', signUpValidator, createUser);
+
+app.use(auth);
 app.use(userRouter);
 app.use(cardRouter);
 
