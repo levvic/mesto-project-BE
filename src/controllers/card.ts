@@ -1,14 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { ObjectId } from 'mongoose';
-import { BadRequestError, NotFoundError, ServerError } from '../errors';
+import { BadRequestError, NotFoundError } from '../errors';
 import Card from '../models/card';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => Card.find({})
   .then((cards) => {
-    if (!cards) {
-      throw new ServerError('Произошла ошибка при получении списка карточек.');
-    }
-
     res.send({ cards });
   })
   .catch(next);
@@ -24,7 +20,15 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
 
       res.send({ message: 'Карточка удалена' });
     })
-    .catch(next);
+    .catch((err) => {
+      let customError = err;
+
+      if (customError.name === 'CastError') {
+        customError = new BadRequestError('Переданы некорректные данные.');
+      }
+
+      next(customError);
+    });
 };
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
@@ -33,13 +37,16 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
 
   return Card.create({ name, link, owner: id })
     .then((card) => {
-      if (!card) {
-        throw new BadRequestError('Переданы некорректные данные при создании карточки.');
-      }
-
       res.send({ card });
     })
-    .catch(next);
+    .catch((err) => {
+      let customError = err;
+
+      if (err.name === 'ValidationError') {
+        customError = new BadRequestError('Переданы некорректные данные при создании карточки.');
+      }
+      next(customError);
+    });
 };
 
 export const putLike = (req: Request, res: Response, next: NextFunction) => {
@@ -58,7 +65,15 @@ export const putLike = (req: Request, res: Response, next: NextFunction) => {
 
       res.send(card);
     })
-    .catch(next);
+    .catch((err) => {
+      let customError = err;
+
+      if (customError.name === 'CastError') {
+        customError = new BadRequestError('Переданы некорректные данные.');
+      }
+
+      next(customError);
+    });
 };
 
 export const removeLike = (req: Request, res: Response, next: NextFunction) => {
@@ -77,5 +92,13 @@ export const removeLike = (req: Request, res: Response, next: NextFunction) => {
 
       res.send(card);
     })
-    .catch(next);
+    .catch((err) => {
+      let customError = err;
+
+      if (customError.name === 'CastError') {
+        customError = new BadRequestError('Переданы некорректные данные.');
+      }
+
+      next(customError);
+    });
 };
