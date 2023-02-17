@@ -4,9 +4,8 @@ import { signInValidator, signUpValidator } from './utils/validator';
 import auth from './middleware/auth';
 import { createUser, login } from './controllers/user';
 import errorHandler from './middleware/errorHandler';
-import userRouter from './routes/user';
-import cardRouter from './routes/card';
-import ERROR_CODE from './utils/constants';
+import router from './routes';
+import { NotFoundError } from './errors';
 import { DB_URL, MODE, SERVER_PORT } from './utils/config';
 
 const app = express();
@@ -18,11 +17,10 @@ app.post('/signin', signInValidator, login);
 app.post('/signup', signUpValidator, createUser);
 
 app.use(auth);
-app.use(userRouter);
-app.use(cardRouter);
+app.use(router);
 
-app.use((req, res, next) => {
-  res.status(ERROR_CODE.NotFound).send({ message: 'Страница не найдена' });
+app.use(() => {
+  throw new NotFoundError('Страница не найдена');
 });
 
 app.use(errorHandler);
