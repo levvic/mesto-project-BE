@@ -25,7 +25,7 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
       const ownerId = String(card?.owner);
 
       if (userId?._id !== ownerId) {
-        throw new ForbiddenError('Вы не являетесь владельцем карточки');
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       }
 
       return Card.deleteOne({ _id: card?._id });

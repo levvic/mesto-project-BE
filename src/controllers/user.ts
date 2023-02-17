@@ -40,6 +40,22 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) => Use
   })
   .catch(next);
 
+export const getAuthUserInfo = (req: Request, res: Response, next: NextFunction) => {
+  const userId = req.user;
+
+  return User.findById(userId)
+    .then((user) => res.send(user))
+    .catch((err) => {
+      let customError = err;
+
+      if (customError.name === 'CastError') {
+        customError = new NotFoundError('Пользователь с указанным _id не найден.');
+      }
+
+      next(customError);
+    });
+};
+
 export const getUserById = (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
 
