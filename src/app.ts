@@ -6,6 +6,7 @@ import { createUser, login } from './controllers/user';
 import errorHandler from './middleware/errorHandler';
 import userRouter from './routes/user';
 import cardRouter from './routes/card';
+import ERROR_CODE from './utils/constants';
 import { DB_URL, MODE, SERVER_PORT } from './utils/config';
 
 const app = express();
@@ -19,6 +20,10 @@ app.post('/signup', signUpValidator, createUser);
 app.use(auth);
 app.use(userRouter);
 app.use(cardRouter);
+
+app.use((req, res, next) => {
+  res.status(ERROR_CODE.NotFound).send({ message: 'Страница не найдена' });
+});
 
 app.use(errorHandler);
 

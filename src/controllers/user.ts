@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 import { JWT_SECRET } from '../utils/config';
 import ERROR_CODE from '../utils/constants';
 import {
-  BadRequestError, DuplicateError, NotFoundError, ServerError,
+  BadRequestError, DuplicateError, NotFoundError,
 } from '../errors';
 import User from '../models/user';
 
@@ -30,12 +30,6 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
 export const getUsers = (req: Request, res: Response, next: NextFunction) => User.find({})
   .then((users) => {
-    if (!users) {
-      throw new ServerError(
-        'Произошла ошибка при получении списка пользователей. Попробуйте повторить позднее.',
-      );
-    }
-
     res.send({ users });
   })
   .catch(next);
@@ -60,12 +54,19 @@ export const getUserById = (req: Request, res: Response, next: NextFunction) => 
   const { userId } = req.params;
 
   return User.findById(userId)
-    .then((user) => res.send(user))
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError(
+          'Пользователь с указанным _id не найден.',
+        );
+      }
+      res.send(user);
+    })
     .catch((err) => {
       let customError = err;
 
       if (customError.name === 'CastError') {
-        customError = new NotFoundError('Пользователь с указанным _id не найден.');
+        customError = new BadRequestError('Переданы некорректные данные.');
       }
 
       next(customError);
@@ -124,12 +125,8 @@ export const updateProfileInfo = (req: Request, res: Response, next: NextFunctio
     .catch((err) => {
       let customError = err;
 
-      if (err.name === 'ValidationError') {
-        customError = new BadRequestError('Переданы некорректные данные при обновлении профиля.');
-      }
-
-      if (customError.name === 'CastError') {
-        customError = new NotFoundError('Пользователь с указанным _id не найден.');
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        customError = new BadRequestError('Переданы некорректные данные.');
       }
 
       next(customError);
@@ -149,12 +146,8 @@ export const updateAvatar = (req: Request, res: Response, next: NextFunction) =>
     .catch((err) => {
       let customError = err;
 
-      if (err.name === 'ValidationError') {
-        customError = new BadRequestError('Переданы некорректные данные при обновлении аватара.');
-      }
-
-      if (customError.name === 'CastError') {
-        customError = new NotFoundError('Пользователь с указанным _id не найден.');
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        customError = new BadRequestError('Переданы некорректные данные.');
       }
 
       next(customError);
