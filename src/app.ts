@@ -1,4 +1,6 @@
 import express, { json } from 'express';
+import helmet from 'helmet';
+import { errors } from 'celebrate';
 import mongoose from 'mongoose';
 import { signInValidator, signUpValidator } from './utils/validator';
 import auth from './middleware/auth';
@@ -11,6 +13,7 @@ import { DB_URL, MODE, SERVER_PORT } from './utils/config';
 const app = express();
 mongoose.connect(DB_URL);
 
+app.use(helmet());
 app.use(json());
 
 app.post('/signin', signInValidator, login);
@@ -23,6 +26,7 @@ app.use(() => {
   throw new NotFoundError('Страница не найдена');
 });
 
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(SERVER_PORT, () => {
