@@ -1,24 +1,35 @@
 import express, { json } from 'express';
+import helmet from 'helmet';
+import { errors } from 'celebrate';
 import mongoose from 'mongoose';
-import fakeAuth from './middleware/fakeAuth';
+import { signInValidator, signUpValidator } from './utils/validator';
+import { requestLogger, errorLogger } from './middleware/logger';
+import auth from './middleware/auth';
+import { createUser, login } from './controllers/user';
 import errorHandler from './middleware/errorHandler';
-import userRouter from './routes/user';
-import cardRouter from './routes/card';
-import ERROR_CODE from './utils/constants';
+import router from './routes';
+import { NotFoundError } from './errors';
 import { DB_URL, MODE, SERVER_PORT } from './utils/config';
 
 const app = express();
 mongoose.connect(DB_URL);
 
+app.use(helmet());
 app.use(json());
-app.use(fakeAuth);
-app.use(userRouter);
-app.use(cardRouter);
 
-app.use((req, res, next) => {
-  res.status(ERROR_CODE.NotFound).send({ message: 'Страница не найдена' });
+app.use(requestLogger);
+app.post('/signin', signInValidator, login);
+app.post('/signup', signUpValidator, createUser);
+
+app.use(auth);
+app.use(router);
+
+app.use(() => {
+  throw new NotFoundError('Страница не найдена');
 });
 
+app.use(errorLogger);
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(SERVER_PORT, () => {

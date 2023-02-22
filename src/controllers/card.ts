@@ -1,6 +1,9 @@
+import { JwtPayload } from 'jsonwebtoken';
 import { NextFunction, Request, Response } from 'express';
 import { ObjectId } from 'mongoose';
-import { BadRequestError, NotFoundError } from '../errors';
+import {
+  BadRequestError, NotFoundError, ForbiddenError,
+} from '../errors';
 import Card from '../models/card';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => Card.find({})
@@ -11,14 +14,17 @@ export const getCards = (req: Request, res: Response, next: NextFunction) => Car
 
 export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
+  const userId = req.user as JwtPayload;
 
-  return Card.findByIdAndRemove(cardId)
+  return Card.findOne({ _id: cardId })
     .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
+      const ownerId = String(card?.owner);
+
+      if (userId?._id !== ownerId) {
+        throw new ForbiddenError('Нельзя удалить чужую карточку');
       }
 
-      res.send({ message: 'Карточка удалена' });
+      return Card.deleteOne({ _id: card?._id });
     })
     .catch((err) => {
       let customError = err;
@@ -33,7 +39,7 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
 
 export const createCard = (req: Request, res: Response, next: NextFunction) => {
   const { name, link } = req.body;
-  const id = req.user._id;
+  const id = req.user as ObjectId;
 
   return Card.create({ name, link, owner: id })
     .then((card) => {
@@ -51,7 +57,7 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
 
 export const putLike = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
-  const id = req.user._id;
+  const id = req.user as ObjectId;
 
   return Card.findByIdAndUpdate(
     cardId,
@@ -78,7 +84,7 @@ export const putLike = (req: Request, res: Response, next: NextFunction) => {
 
 export const removeLike = (req: Request, res: Response, next: NextFunction) => {
   const { cardId } = req.params;
-  const id = req.user._id as ObjectId;
+  const id = req.user as ObjectId;
 
   return Card.findByIdAndUpdate(
     cardId,
