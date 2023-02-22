@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import { errors } from 'celebrate';
 import mongoose from 'mongoose';
 import { signInValidator, signUpValidator } from './utils/validator';
+import { requestLogger, errorLogger } from './middleware/logger';
 import auth from './middleware/auth';
 import { createUser, login } from './controllers/user';
 import errorHandler from './middleware/errorHandler';
@@ -16,6 +17,7 @@ mongoose.connect(DB_URL);
 app.use(helmet());
 app.use(json());
 
+app.use(requestLogger);
 app.post('/signin', signInValidator, login);
 app.post('/signup', signUpValidator, createUser);
 
@@ -26,6 +28,7 @@ app.use(() => {
   throw new NotFoundError('Страница не найдена');
 });
 
+app.use(errorLogger);
 app.use(errors());
 app.use(errorHandler);
 
