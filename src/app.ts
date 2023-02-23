@@ -1,4 +1,4 @@
-import express, { json } from 'express';
+import express, { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import { errors } from 'celebrate';
 import mongoose from 'mongoose';
@@ -16,6 +16,7 @@ mongoose.connect(DB_URL);
 
 app.use(helmet());
 app.use(json());
+app.use(urlencoded({ extended: true }));
 
 app.use(requestLogger);
 app.post('/signin', signInValidator, login);
