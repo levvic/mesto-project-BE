@@ -1,6 +1,7 @@
 import {
   model, Model, Schema, Document,
 } from 'mongoose';
+import validator from 'validator';
 import bcrypt from 'bcrypt';
 import { UnauthorizedError } from '../errors';
 
@@ -32,11 +33,19 @@ const userSchema = new Schema<IUser, UserModel>({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    validate: {
+      validator: (avatar: string) => validator.isURL(avatar),
+      message: 'Неправильный формат ссылки',
+    },
   },
   email: {
     type: String,
     required: true,
     unique: true,
+    validate: {
+      validator: (v: string) => validator.isEmail(v),
+      message: 'Неправильный формат почты',
+    },
   },
   password: {
     type: String,
